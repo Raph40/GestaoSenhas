@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestor de Contas / Registar</title>
+    <link rel="stylesheet" href="../estilos/style.css" />
+</head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+        <form class="space-y-4">
+            <h1 class="text-blue-500 text-2xl font-bold flex justify-center pb-6 uppercase">Criar Conta</h1>
+            <label for="Nome" class="block text-sm font-medium text-slate-300 mb-1">Nome</label>
+            <input type="text" name="Nome" id="Nome" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite seu nome" />
+            <label for="Email" class="block text-sm font-medium text-slate-300 mb-1">Email</label>
+            <input type="email" name="Email" id="Email" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite seu email" />
+            <label for="Senha" class="block text-sm font-medium text-slate-300 mb-1">Senha</label>
+            <input type="password" name="Senha" id="Senha" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite sua senha" />
+            <label for="ConfirmarSenha" class="block text-sm font-medium text-slate-300 mb-1">Confirmar Senha</label>
+            <input type="password" name="ConfirmarSenha" id="confirmarSenha" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite sua senha" />
+            <button type="submit" class="w-full py-3 px-4 inline-flex justify-center items-center text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">Registrar</button>
+        </form>
+    </div>
+
+</body>
+</html>
