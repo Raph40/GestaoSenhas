@@ -1,5 +1,5 @@
 import mysql.connector
-from python.infdotenv import host, user, password, database
+from infdotenv import host, user, password, database
 
 class sqlConnection():
     def Connection(self):

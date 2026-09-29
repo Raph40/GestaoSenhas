@@ -1,9 +1,10 @@
 import mysql
 from fastapi import FastAPI
 from pydantic import BaseModel, Field, EmailStr
-from python import connect
+import connect
 from fastapi.middleware.cors import CORSMiddleware
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 app = FastAPI()
 
@@ -24,6 +25,10 @@ class Registar(BaseModel):
     email: EmailStr = Field(min_length=1, max_length=50)
     senha: str = Field(min_length=1, max_length=50)
     confirmarSenha: str = Field(min_length=1, max_length=50)
+
+class Login(BaseModel):
+    email: EmailStr = Field(min_length=1, max_length=50)
+    senha: str = Field(min_length=1, max_length=50)
 
 @app.post("/registar")
 async def registar(infRegistar: Registar):
@@ -67,4 +72,20 @@ async def registar(infRegistar: Registar):
         mydb.close()
         return {"Sucesso": "Conta criada com sucesso!!"}
 
+@app.post("/login")
+async def login(infLogin: Login):
+    ph = PasswordHasher()
+    mydb = connect.sqlConnection().Connection()
+    mydb.connect()
+    mycursor = mydb.cursor()
 
+    perfilQuerry = "SELECT email FROM utilizadores WHERE email = %s"
+    perfilValor = (infLogin.email)
+    mycursor.execute(perfilQuerry, perfilValor)
+    conta = mycursor.fetchone()
+
+    try:
+        ph.verify(perfilValor, conta[1])
+        return {"Sucesso": "Login realizado com sucesso!"}
+    except VerifyMismatchError:
+        return {"Erro": "Senha incorreta!"}

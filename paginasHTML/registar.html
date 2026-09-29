@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestor de Contas / Registar</title>
-    <link rel="stylesheet" href="../estilos/style.css" />
-    <script type="module" src="../js/registar.js"></script>
+    <link rel="stylesheet" href="estilos/style.css" />
+    <script type="module" src="js/registar.js"></script>
 </head>
 <body class="bg-slate-900 text-white flex items-center justify-center min-h-screen">
     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
@@ -30,6 +30,13 @@
             <button type="submit" id="botaoRegistar" class="w-full py-3 px-4 inline-flex justify-center items-center text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">Registrar</button>
         </form>
     </div>
-
+    <div id="mensagemSucesso" role="status"
+         class="hidden fixed top-6 left-1/2 z-50
+            w-11/12 max-w-lg items-center gap-4 rounded-xl
+            border-2 border-green-300 bg-green-600 px-6 py-5
+            text-white shadow-2xl">
+        <span class="text-3xl">✓</span>
+        <span id="mensagemTexto" class="text-xl font-semibold"></span>
+    </div>
 </body>
 </html>
