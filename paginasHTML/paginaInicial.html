@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contas</title>
+    <link rel="stylesheet" href="estilos/style.css" />
+    <script type="module" src="js/login.js"></script>
+</head>
+<body class="bg-slate-900 text-white flex min-h-screen ">
+    <aside id="sidebarDonos" class="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0d1629] px-5 py-8 text-slate-400">
+        <div id="parteSuperior">
+            <h1 class="mb-8 px-3.5 text-[22px] font-medium text-[#2b7fff]">Contas</h1>
+
+            <div id="donos">
+                <h2 class="mb-2 px-3.5 text-xs uppercase text-slate-500">Donos</h2>
+
+                <ul id="listaDonos" class="flex flex-col gap-1">
+                    <li>
+                        <button type="button" aria-current="true"
+                                class="flex w-full items-center gap-2.5 rounded-[10px] bg-[#12264d] px-3.5 py-2.5 text-[15px] text-[#2b7fff] transition-colors">
+                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                                <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+                            </svg>
+                            Todos
+                            <span class="ml-auto text-[13px]">12</span>
+                        </button>
+                    </li>
+
+                    <li>
+                        <button type="button"
+                                class="flex w-full items-center gap-2.5 rounded-[10px] px-3.5 py-2.5 text-[15px] text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200">
+                            <span class="h-[9px] w-[9px] shrink-0 rounded-full bg-blue-500"></span>
+                            Eu
+                            <span class="ml-auto text-[13px]">4</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <button id="adicionarDonos" type="button"
+                        class="mt-2 flex w-full items-center gap-2.5 rounded-[10px] px-3.5 py-2.5 text-[15px] text-slate-400 transition-colors hover:text-slate-200">
+                    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Novo dono
+                </button>
+            </div>
+        </div>
+
+        <div id="parteInferior" class="mt-auto border-t border-slate-800 px-3.5 pt-5">
+            <p id="email" class="mb-3 truncate text-sm text-slate-400"></p>
+            <button id="sairConta" type="button"
+                    class="flex h-10 w-full items-center justify-center rounded-[10px] border border-slate-600 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800/50">
+                Sair
+            </button>
+        </div>
+    </aside>
+</body>
+</html>

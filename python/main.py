@@ -30,6 +30,26 @@ class Login(BaseModel):
     email: EmailStr = Field(min_length=1, max_length=50)
     senha: str = Field(min_length=1, max_length=50)
 
+
+@app.get("/emailExistente")
+async def emailExistente(email: str):
+    mydb = connect.sqlConnection().Connection()
+    mydb.connect()
+    mycursor = mydb.cursor()
+
+    print(email)
+
+    emailQuery = "SELECT * FROM utilizadores WHERE email = %s"
+    emailValor = (email,)
+    mycursor.execute(emailQuery, emailValor)
+    email = mycursor.fetchone()
+
+    print(email)
+    if email:
+        return {"Erro": "Email já utilizado!"}
+    else:
+        return {"Sucesso": "Email não utilizado!"}
+
 @app.post("/registar")
 async def registar(infRegistar: Registar):
     if not infRegistar.nome:
@@ -59,8 +79,6 @@ async def registar(infRegistar: Registar):
         mydb.connect()
         mycursor = mydb.cursor()
 
-        print(ph.hash(infRegistar.senha))
-
         registarQuery = 'INSERT INTO utilizadores (nome, email, senha) VALUES (%s, %s, %s)'
         registarInf = (infRegistar.nome, infRegistar.email, ph.hash(infRegistar.senha))
         mycursor.execute(registarQuery, registarInf)
@@ -79,13 +97,14 @@ async def login(infLogin: Login):
     mydb.connect()
     mycursor = mydb.cursor()
 
-    perfilQuerry = "SELECT email FROM utilizadores WHERE email = %s"
-    perfilValor = (infLogin.email)
+    perfilQuerry = "SELECT * FROM utilizadores WHERE email = %s"
+    perfilValor = (infLogin.email,)
     mycursor.execute(perfilQuerry, perfilValor)
     conta = mycursor.fetchone()
+    print(type(conta[3]))
 
     try:
-        ph.verify(perfilValor, conta[1])
+        ph.verify(conta[3], infLogin.senha)
         return {"Sucesso": "Login realizado com sucesso!"}
     except VerifyMismatchError:
         return {"Erro": "Senha incorreta!"}

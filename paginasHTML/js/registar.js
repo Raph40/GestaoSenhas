@@ -49,6 +49,16 @@ botao.addEventListener('click', async (e) => {
         confirmarSenha.classList.remove("!border-red-500")
     }
 
+    const response = await fetch(`http://localhost:8000/emailExistente?email=${encodeURIComponent(email.value)}`)
+
+    const json = await response.json()
+
+    if ("Erro" in json) {
+        emailError.textContent = "Email já existe!"
+        email.classList.add("!border-red-500")
+        return
+    }
+
     if (nome.value && senha.value && senha.value && confirmarSenha.value) {
         const response = await fetch('http://localhost:8000/registar', {
             method: "POST",

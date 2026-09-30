@@ -17,6 +17,12 @@ document.getElementById("login").addEventListener("click", async event => {
         password.classList.remove("!border-red-500")
     }
 
+    if ("Erro" in response) {
+        document.getElementById("passwordError").textContent = response.Erro
+        password.classList.add("!border-red-500")
+        return
+    }
+
     if (email.value && password.value) {
         const response = await fetch("http://localhost:8000/login", {
             method: "POST",
@@ -31,6 +37,7 @@ document.getElementById("login").addEventListener("click", async event => {
         })
 
         const json = await response.json()
+        console.log(json)
 
         if ("Erro" in json) {
             const mensagemErro = document.getElementById("mensagemErro")
@@ -43,9 +50,13 @@ document.getElementById("login").addEventListener("click", async event => {
                 mensagemErro.classList.remove("flex");
             }, 4000);
         } else if ("Sucesso" in json) {
+            const mensagemSucesso = document.getElementById("mensagemSucesso")
+            document.getElementById("mensagemSucessoTexto").textContent = json["Sucesso"]
+            mensagemSucesso.classList.remove("hidden");
+            mensagemSucesso.classList.add("flex");
             setTimeout(() => {
-                window.location.href = "paginaInicial.html";
-            }, 4000);
+                window.location.href = "../paginaInicial.html";
+            }, 2000);
         }
     }
 })
