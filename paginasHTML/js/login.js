@@ -17,15 +17,10 @@ document.getElementById("login").addEventListener("click", async event => {
         password.classList.remove("!border-red-500")
     }
 
-    if ("Erro" in response) {
-        document.getElementById("passwordError").textContent = response.Erro
-        password.classList.add("!border-red-500")
-        return
-    }
-
     if (email.value && password.value) {
-        const response = await fetch("http://localhost:8000/login", {
+        const response = await fetch("http://localhost:8080/login", {
             method: "POST",
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",

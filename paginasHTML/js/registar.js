@@ -49,7 +49,7 @@ botao.addEventListener('click', async (e) => {
         confirmarSenha.classList.remove("!border-red-500")
     }
 
-    const response = await fetch(`http://localhost:8000/emailExistente?email=${encodeURIComponent(email.value)}`)
+    const response = await fetch(`http://localhost:8080/emailExistente?email=${encodeURIComponent(email.value)}`)
 
     const json = await response.json()
 
@@ -60,7 +60,7 @@ botao.addEventListener('click', async (e) => {
     }
 
     if (nome.value && senha.value && senha.value && confirmarSenha.value) {
-        const response = await fetch('http://localhost:8000/registar', {
+        const response = await fetch('http://localhost:8080/registar', {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

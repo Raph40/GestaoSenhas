@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+@theme {
+  --color-fundo: #0d1629;
+  --color-cartao: #111c2e;
+}
