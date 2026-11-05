@@ -4,19 +4,42 @@ import hashlib
 import secrets
 import uvicorn
 
-
-from fastapi import FastAPI, Response, Cookie
+from fastapi import FastAPI, Response, Cookie, APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, EmailStr
 from fastapi.middleware.cors import CORSMiddleware
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
 from datetime import datetime, timedelta
 from typing import Annotated
+from mysql.connector import IntegrityError, DataError, OperationalError, DatabaseError, OperationalError, ProgrammingError, DatabaseError
 
 NOME_COOKIE = "sessao_id"
 DURACAO_SESSAO = timedelta(minutes=30)
 
+def verificacao_cookie(response: Response, nome_do_cookie: str | None = Cookie(default=None, alias=NOME_COOKIE)):
+    if nome_do_cookie == None:
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
+
+        mycursor.execute(
+            """
+                DELETE FROM sessao WHERE expira < NOW()
+            """
+        )
+
+        mydb.commit()
+
+        response.delete_cookie(
+            key=NOME_COOKIE,
+            path="/"
+        )
+
+        raise HTTPException(status_code=401, detail="Credenciais inválidas")
+
 app = FastAPI()
+
+privado = APIRouter(dependencies=[Depends(verificacao_cookie)])
+publico = APIRouter()
 
 origins = [
     "http://localhost:5173",
@@ -50,72 +73,96 @@ class Conta(BaseModel):
     senha: str = Field(min_length=1, max_length=50)
     idTitular: int
 
+class EditarConta(BaseModel):
+    id_conta: int
+    entidade: str = Field(min_length=1, max_length=50)
+    email: EmailStr = Field(min_length=1, max_length=50)
+    senha: str = Field(min_length=1, max_length=50)
+    idTitular: int
 
-@app.get("/emailExistente")
-async def emailExistente(email: str):
-    mydb = connect.sqlConnection().Connection()
-    mydb.connect()
-    mycursor = mydb.cursor()
+@publico.get("/emailExistente")
+async def email_existente(email: str):
+    try:
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor()
 
-    emailQuery = "SELECT * FROM utilizadores WHERE email = %s"
-    emailValor = (email,)
-    mycursor.execute(emailQuery, emailValor)
-    email = mycursor.fetchone()
+        email_query = "SELECT * FROM utilizadores WHERE email = %s"
+        email_valor = (email,)
+        mycursor.execute(email_query, email_valor)
+        email = mycursor.fetchone()
 
-    if email:
-        return {"Erro": "Email já utilizado!"}
-    else:
-        return {"Sucesso": "Email não utilizado!"}
+        if email:
+            return {"Erro": "Email já utilizado!"}
+        else:
+            return {"Sucesso": "Email não utilizado!"}
+    except OperationalError:
+        return {"Erro"}
+    except ProgrammingError:
+        return {"Erro"}
+    except DatabaseError:
+        return {"Erro"}
+    finally:
+        mycursor.close()
 
-@app.get("/senhaConta")
-async def senhaConta(idConta: str, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
-    mydb = connect.sqlConnection().Connection()
-    mydb.connect()
-    mycursor = mydb.cursor()
-    tokenHash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
 
-    mycursor.execute(
-        """
-            SELECT 
-                contas.idContas,
-                contas.senha
-            FROM gestaocontas.sessao
-            INNER JOIN gestaocontas.utilizadores
-                ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
-            INNER JOIN gestaocontas.titular
-                ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
-            INNER JOIN gestaocontas.contas
-                ON titular.idTitular = contas.Titular_idTitular
-            WHERE sessao.idSessao = %s AND contas.IdContas = %s
-        """,
-        (tokenHash,idConta)
-    )
+@privado.get("/senhaConta")
+async def senha_conta(id_conta: str, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor()
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
 
-    infSenha = mycursor.fetchall()
+        mycursor.execute(
+            """
+                SELECT 
+                    contas.idContas,
+                    contas.senha
+                FROM gestaocontas.sessao
+                INNER JOIN gestaocontas.utilizadores
+                    ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
+                INNER JOIN gestaocontas.titular
+                    ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
+                INNER JOIN gestaocontas.contas
+                    ON titular.idTitular = contas.Titular_idTitular
+                WHERE sessao.idSessao = %s AND contas.IdContas = %s
+            """,
+            (token_hash,id_conta)
+        )
 
-    return infSenha
+        inf_senha = mycursor.fetchall()
+        return inf_senha
+    except OperationalError:
+        return {"Erro"}
+    except ProgrammingError:
+        return {"Erro"}
+    except DatabaseError:
+        return {"Erro"}
+    finally:
+        mycursor.close()
 
-@app.post("/registar")
-async def registar(infRegistar: Registar):
-    if not infRegistar.nome:
+@publico.post("/registar")
+async def registar(inf_registar: Registar):
+    if not inf_registar.nome:
         raise ValueError("Campo nome obrigatorio!!")
-    if not isinstance(infRegistar.nome, str):
+    if not isinstance(inf_registar.nome, str):
         raise ValueError("Campo nome é do tipo texto!!")
 
-    if not infRegistar.email:
+    if not inf_registar.email:
         raise ValueError("Campo email obrigatorio!!")
 
-    if not infRegistar.senha:
+    if not inf_registar.senha:
         raise ValueError("Campo senha obrigatorio!!")
-    if not isinstance(infRegistar.senha, str):
+    if not isinstance(inf_registar.senha, str):
         raise ValueError("Campo senha é do tipo texto!!")
 
-    if not infRegistar.confirmarSenha:
+    if not inf_registar.confirmarSenha:
         raise ValueError("Campo para confirmar a senha obrigatorio!!")
-    if not isinstance(infRegistar.confirmarSenha, str):
+    if not isinstance(inf_registar.confirmarSenha, str):
         raise ValueError("Campo para confirmar a senha é do tipo texto!!")
 
-    if infRegistar.senha != infRegistar.confirmarSenha:
+    if inf_registar.senha != inf_registar.confirmarSenha:
         raise ValueError("Senhas diferentes!!")
 
     try:
@@ -124,45 +171,52 @@ async def registar(infRegistar: Registar):
         mydb.connect()
         mycursor = mydb.cursor()
 
-        registarQuery = 'INSERT INTO utilizadores (nome, email, senha) VALUES (%s, %s, %s)'
-        registarInf = (infRegistar.nome, infRegistar.email, ph.hash(infRegistar.senha))
-        mycursor.execute(registarQuery, registarInf)
+        registar_query = 'INSERT INTO utilizadores (nome, email, senha) VALUES (%s, %s, %s)'
+        registar_inf = (inf_registar.nome, inf_registar.email, ph.hash(inf_registar.senha))
+        mycursor.execute(registar_query, registar_inf)
         mydb.commit()
-    except mysql.connector.Error as err:
-        raise ValueError(err)
-    else:
+        return {"Sucesso": "Conta criada com sucesso!!"}
+    except IntegrityError:
+        mydb.rollback
+    except DataError:
+        mydb.rollback
+    except OperationalError:
+        mydb.rollback
+    except DatabaseError:
+        mydb.rollback
+    finally:
         mycursor.close()
         mydb.close()
-        return {"Sucesso": "Conta criada com sucesso!!"}
+        
 
-@app.post("/login")
-async def login(infLogin: Login, response: Response):
+@publico.post("/login")
+async def login(inf_login: Login, response: Response):
     ph = PasswordHasher()
     mydb = connect.sqlConnection().Connection()
     mydb.connect()
     mycursor = mydb.cursor(buffered=True)
 
-    perfilQuerry = "SELECT * FROM utilizadores WHERE email = %s"
-    perfilValor = (infLogin.email,)
-    mycursor.execute(perfilQuerry, perfilValor)
+    perfil_querry = "SELECT * FROM utilizadores WHERE email = %s"
+    perfil_valor = (inf_login.email,)
+    mycursor.execute(perfil_querry, perfil_valor)
     conta = mycursor.fetchone()
 
     try:
-        ph.verify(conta[3], infLogin.senha)
+        ph.verify(conta[3], inf_login.senha)
 
-        mycursorInsert = mydb.cursor(buffered=True)
-        tokenSegredo = secrets.token_urlsafe(32)
-        tokenHash = hashlib.sha256(tokenSegredo.encode()).hexdigest()
-        dataExpira = datetime.now() + DURACAO_SESSAO
-        sessaoQuerry = "INSERT INTO sessao (idSessao, Utilizadores_idUtilizadores, criada, expira) VALUES (%s, %s, %s, %s)"
-        sessaoValores = (tokenHash, conta[0], datetime.now(), dataExpira)
-        mycursorInsert.execute(sessaoQuerry, sessaoValores)
+        mycursor_insert = mydb.cursor(buffered=True)
+        token_segredo = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(token_segredo.encode()).hexdigest()
+        data_expira = datetime.now() + DURACAO_SESSAO
+        sessao_querry = "INSERT INTO sessao (idSessao, Utilizadores_idUtilizadores, criada, expira) VALUES (%s, %s, %s, %s)"
+        sessao_valores = (token_hash, conta[0], datetime.now(), data_expira)
+        mycursor_insert.execute(sessao_querry, sessao_valores)
         mydb.commit()
-        mycursorInsert.close()
+        mycursor_insert.close()
 
         response.set_cookie(
             key=NOME_COOKIE,
-            value=tokenSegredo,
+            value=token_segredo,
             httponly=True,
             samesite="none",
             secure=True,
@@ -171,132 +225,173 @@ async def login(infLogin: Login, response: Response):
         )
 
         return {"Sucesso": "Login realizado com sucesso!"}
-    except VerifyMismatchError:
+    except IntegrityError:
+        mydb.rollback
+        return {"Erro"}
+    except DataError:
+        mydb.rollback
+        return {"Erro"}
+    except OperationalError:
+        mydb.rollback
+        return {"Erro"}
+    except DatabaseError:
+        mydb.rollback
+        return {"Erro"}
+    finally:
         mycursor.close()
-        return {"Erro": "Senha incorreta!"}
+        mydb.close()
 
-@app.get("/paginaContas")
-async def paginaContas(nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
-    mydb = connect.sqlConnection().Connection()
-    mydb.connect()
-    mycursor = mydb.cursor(buffered=True)
+@privado.get("/paginaContas")
+async def pagina_contas(nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
 
-    tokenHash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
 
-    mycursor.execute(
-        """
-            SELECT
-                utilizadores.idUtilizadores,
-                utilizadores.nome,
-                utilizadores.email,
-                titular.idTitular,
-                titular.Titular,
-                sessao.expira
-            FROM gestaocontas.sessao
-            INNER JOIN gestaocontas.utilizadores
-                ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
-            INNER JOIN gestaocontas.titular
-                ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
-            WHERE sessao.idSessao = %s;
-        """,
-        (tokenHash,)
-    )
-    infUtilizador = mycursor.fetchall()
+        mycursor.execute(
+            """
+                SELECT
+                    utilizadores.idUtilizadores,
+                    utilizadores.nome,
+                    utilizadores.email,
+                    titular.idTitular,
+                    titular.Titular,
+                    sessao.expira
+                FROM gestaocontas.sessao
+                INNER JOIN gestaocontas.utilizadores
+                    ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
+                INNER JOIN gestaocontas.titular
+                    ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
+                WHERE sessao.idSessao = %s;
+            """,
+            (token_hash,)
+        )
+        inf_utilizador = mycursor.fetchall()
 
-    print(infUtilizador)
+        inf_utilizador_json = {
+            "Utilizador": {
+                "id": inf_utilizador[0][0],
+                "nome": inf_utilizador[0][1],
+                "email": inf_utilizador[0][2],
+                "dataExpiracao": inf_utilizador[0][4]
+            },
+            "Titulares": [{
+                "idTitular": i[3],
+                "titular": i[4]
+            } for i in inf_utilizador],
+        }
+        return inf_utilizador_json
+    except OperationalError:
+        return {"Erro"}
+    except ProgrammingError:
+        return {"Erro"}
+    except DatabaseError:
+        return {"Erro"}
+    finally:
+        mycursor.close()
+        mydb.close()
 
-    infUtilizadorJSON = {
-        "Utilizador": {
-            "id": infUtilizador[0][0],
-            "nome": infUtilizador[0][1],
-            "email": infUtilizador[0][2],
-            "dataExpiracao": infUtilizador[0][4]
-        },
-        "Titulares": [{
+@privado.get("/contas")
+async def contas(nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
+
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+        mycursor.execute(
+            """
+                SELECT
+                    contas.idContas,
+                    contas.entidade,
+                    contas.email,
+                    titular.idTitular,
+                    titular.titular
+                FROM gestaocontas.sessao
+                INNER JOIN gestaocontas.utilizadores
+                    ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
+                INNER JOIN gestaocontas.titular
+                    ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
+                INNER JOIN gestaocontas.contas
+                    ON titular.idTitular = contas.Titular_idTitular
+                WHERE sessao.idSessao = %s;
+            """,
+            (token_hash,)
+        )
+        inf_contas = mycursor.fetchall()
+
+        inf_contas_json = [{
+            "idConta": i[0],
+            "entidade": i[1],
+            "email": i[2],
             "idTitular": i[3],
             "titular": i[4]
-        } for i in infUtilizador],
-    }
+        } for i in inf_contas]
 
-    print(infUtilizadorJSON)
+        return inf_contas_json
+    except OperationalError:
+        return {"Erro"}
+    except ProgrammingError:
+        return {"Erro"}
+    except DatabaseError:
+        return {"Erro"}
+    finally:
+        mycursor.close()
+        mydb.close()
 
-    return infUtilizadorJSON
+@privado.get("/contasTitular")
+async def contas_titular(titular: int, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
 
-@app.get("/contas")
-async def contas(nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
-    mydb = connect.sqlConnection().Connection()
-    mydb.connect()
-    mycursor = mydb.cursor(buffered=True)
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+        mycursor.execute(
+            """
+                SELECT
+                    contas.idContas,
+                    contas.entidade,
+                    contas.email,
+                    titular.titular
+                FROM gestaocontas.sessao
+                INNER JOIN gestaocontas.utilizadores
+                    ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
+                INNER JOIN gestaocontas.titular
+                    ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
+                INNER JOIN gestaocontas.contas
+                    ON titular.idTitular = contas.Titular_idTitular
+                WHERE sessao.idSessao = %s AND contas.Titular_idTitular = %s;
+            """,
+            (token_hash,titular)
+        )
+        inf_contas = mycursor.fetchall()
 
-    tokenHash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
-    mycursor.execute(
-        """
-            SELECT
-                contas.idContas,
-                contas.entidade,
-                contas.email,
-                titular.titular
-            FROM gestaocontas.sessao
-            INNER JOIN gestaocontas.utilizadores
-                ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
-            INNER JOIN gestaocontas.titular
-                ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
-            INNER JOIN gestaocontas.contas
-                ON titular.idTitular = contas.Titular_idTitular
-            WHERE sessao.idSessao = %s;
-        """,
-        (tokenHash,)
-    )
-    infContas = mycursor.fetchall()
+        inf_contas_json = [{
+            "idConta": i[0],
+            "entidade": i[1],
+            "email": i[2],
+            "titular": i[3]
+        } for i in inf_contas]
+        
+        print(inf_contas_json)
 
-    infContasJSON = [{
-        "idConta": i[0],
-        "entidade": i[1],
-        "email": i[2],
-        "titular": i[3]
-    } for i in infContas]
-
-    return infContasJSON
-
-@app.get("/contasTitular")
-async def contasTitular(titular: int, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
-    mydb = connect.sqlConnection().Connection()
-    mydb.connect()
-    mycursor = mydb.cursor(buffered=True)
-
-    tokenHash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
-    mycursor.execute(
-        """
-            SELECT
-                contas.idContas,
-                contas.entidade,
-                contas.email,
-                titular.titular
-            FROM gestaocontas.sessao
-            INNER JOIN gestaocontas.utilizadores
-                ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
-            INNER JOIN gestaocontas.titular
-                ON utilizadores.idUtilizadores = titular.Utilizadores_idUtilizadores
-            INNER JOIN gestaocontas.contas
-                ON titular.idTitular = contas.Titular_idTitular
-            WHERE sessao.idSessao = %s AND contas.idContas = %s;
-        """,
-        (tokenHash,titular)
-    )
-    infContas = mycursor.fetchall()
-
-    infContasJSON = [{
-        "idConta": i[0],
-        "entidade": i[1],
-        "email": i[2],
-        "titular": i[3]
-    } for i in infContas]
-
-    return infContasJSON
+        return inf_contas_json
+    except OperationalError:
+        return {"Erro"}
+    except ProgrammingError:
+        return {"Erro"}
+    except DatabaseError:
+        return {"Erro"}
+    finally:
+        mycursor.close()
+        mydb.close()
     
-@app.post("/criarDono")
-async def criarDono(dono: Dono, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
-    tokenHash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+@privado.post("/criarDono")
+async def criar_dono(dono: Dono, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
     mydb = connect.sqlConnection().Connection()
     mydb.connect()
     mycursor = mydb.cursor(buffered=True)
@@ -306,71 +401,180 @@ async def criarDono(dono: Dono, nome_do_cookie: Annotated[str | None, Cookie(ali
             """
                 SELECT Utilizadores_idUtilizadores FROM sessao WHERE idSessao = %s
             """,
-            (tokenHash,)
+            (token_hash,)
         )
-        infUtilizador = mycursor.fetchone()
+        inf_utilizador = mycursor.fetchone()
 
         mycursor.execute(
             """
                 INSERT INTO titular (Titular,Utilizadores_idUtilizadores) VALUES (%s,%s)
             """,
-            (dono.nome,infUtilizador[0])
+            (dono.nome,inf_utilizador[0])
         )
         mydb.commit()
-    except mysql.connector.Error as err:
-            raise ValueError(err)
-    else:
+
+        return {"Sucesso": "Titular adicionado com sucesso!!"}
+    except IntegrityError:
+        mydb.rollback
+    except DataError:
+        mydb.rollback
+    except OperationalError:
+        mydb.rollback
+    except DatabaseError:
+        mydb.rollback
+    finally:
         mycursor.close()
         mydb.close()
-        return {"Sucesso": "Titular adicionado com sucesso!!"}
+        
 
-@app.post("/adicionarConta")
-async def adicionarConta(infConta: Conta, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
-    tokenHash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
-    mydb = connect.sqlConnection().Connection()
-    mydb.connect()
-    mycursor = mydb.cursor(buffered=True)
+@privado.post("/adicionarConta")
+async def adicionar_conta(inf_conta: Conta, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
 
-    mycursor.execute(
-        """
-            SELECT utilizadores_idUtilizadores FROM sessao WHERE idSessao = %s
-        """,
-        (tokenHash,)
-    )
-
-    resultadoId = mycursor.fetchall()
-
-    mycursor.execute(
-        """
-            INSERT INTO contas (utilizadores_idUtilizadores, entidade, email, senha, Titular_idTitular) VALUES (%s,%s,%s,%s,%s)
-        """,
-        (resultadoId[0][0], infConta.entidade, infConta.email, infConta.senha, infConta.idTitular)
-    )
-
-    mydb.commit()
-
-@app.delete("/sairConta")
-async def sairConta(response: Response, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
-    tokenHash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
-    mydb = connect.sqlConnection().Connection()
-    mydb.connect()
-    mycursor = mydb.cursor(buffered=True)
-
-    mycursor.execute(
-        """
-            DELETE FROM sessao WHERE idSessao = %s
-        """,
-        (tokenHash,)
-    )
-
-    mydb.commit()
-
-    response.delete_cookie(
-        key=NOME_COOKIE,
-        path="/"
+        mycursor.execute(
+            """
+                SELECT utilizadores_idUtilizadores FROM sessao WHERE idSessao = %s
+            """,
+            (token_hash,)
         )
 
-    return {"Sucesso": "Sessao terminada com sucesso!"}
+        resultado_id = mycursor.fetchall()
+
+        mycursor.execute(
+            """
+                INSERT INTO contas (utilizadores_idUtilizadores, entidade, email, senha, Titular_idTitular) VALUES (%s,%s,%s,%s,%s)
+            """,
+            (resultado_id[0][0], inf_conta.entidade, inf_conta.email, inf_conta.senha, inf_conta.idTitular)
+        )
+
+        mydb.commit()
+    except IntegrityError:
+        mydb.rollback
+    except DataError:
+        mydb.rollback
+    except OperationalError:
+        mydb.rollback
+    except DatabaseError:
+        mydb.rollback
+    finally:
+        mycursor.close()
+        mydb.close()
+
+@privado.put("/editarConta")
+async def editar_conta(editar: EditarConta, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
+
+        mycursor.execute(
+            """
+            UPDATE gestaocontas.contas AS contas
+            INNER JOIN gestaocontas.titular AS titular 
+                ON contas.Titular_idTitular = titular.idTitular
+            INNER JOIN gestaocontas.utilizadores AS utilizadores 
+                ON titular.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
+            INNER JOIN gestaocontas.sessao AS sessao 
+                ON sessao.Utilizadores_idUtilizadores = utilizadores.idUtilizadores
+            SET
+                contas.entidade = %s,
+                contas.email = %s,
+                contas.senha = %s,
+                contas.Titular_idTitular = %s
+            WHERE sessao.idSessao = %s AND contas.idContas = %s;
+            """,
+            (editar.entidade, editar.email, editar.senha, editar.idTitular, token_hash, editar.id_conta)
+        )
+
+        mydb.commit()
+
+        return {"Sucesso": "Dados atualizados com sucesso!!"}
+    except IntegrityError:
+        mydb.rollback
+    except DataError:
+        mydb.rollback
+    except OperationalError:
+        mydb.rollback
+    except DatabaseError:
+        mydb.rollback
+    finally:
+        mycursor.close()
+        mydb.close()
+
+@privado.delete("/deleteConta")
+async def delete_conta(id_conta: int, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
+        
+        mycursor.execute(
+            """
+                DELETE FROM gestaocontas.contas
+                WHERE idContas = %s
+                AND Utilizadores_idUtilizadores = (
+                    SELECT Utilizadores_idUtilizadores
+                    FROM gestaocontas.sessao
+                    WHERE idSessao = %s
+                )
+            """,
+            (id_conta, token_hash)
+        )
+        mydb.commit()
+        return {"Sucesso": "Conta removida com sucesso!!"}
+    except IntegrityError:
+        mydb.rollback
+    except DataError:
+        mydb.rollback
+    except OperationalError:
+        mydb.rollback
+    except DatabaseError:
+        mydb.rollback
+    finally:
+        mycursor.close()
+        mydb.close()
+
+@privado.delete("/sairConta")
+async def sair_conta(response: Response, nome_do_cookie: Annotated[str | None, Cookie(alias=NOME_COOKIE)] = None,):
+    try:
+        token_hash = hashlib.sha256(nome_do_cookie.encode()).hexdigest()
+        mydb = connect.sqlConnection().Connection()
+        mydb.connect()
+        mycursor = mydb.cursor(buffered=True)
+
+        mycursor.execute(
+            """
+                DELETE FROM sessao WHERE idSessao = %s
+            """,
+            (token_hash,)
+        )
+
+        mydb.commit()
+
+        response.delete_cookie(
+            key=NOME_COOKIE,
+            path="/"
+            )
+
+        return {"Sucesso": "Sessao terminada com sucesso!"}
+    except IntegrityError:
+        mydb.rollback
+    except OperationalError:
+        mydb.rollback
+    except DatabaseError:
+        mydb.rollback
+    finally:
+        mycursor.close()
+        mydb.close()
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8080, reload=True)
+    
+app.include_router(publico)   # liga os routers à app
+app.include_router(privado)

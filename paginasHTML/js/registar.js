@@ -7,8 +7,6 @@ botao.addEventListener('click', async (e) => {
     const senha = document.getElementById('senha')
     const confirmarSenha = document.getElementById('confirmarSenha')
 
-    console.log(nome.value)
-
     if (nome.value === '') {
         const nomeError = document.getElementById('nomeError')
         nomeError.textContent = "Campo Nome Obrigatório!!"
