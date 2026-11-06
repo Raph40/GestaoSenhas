@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async function () {
-    const responseUtilizadores = await fetch(`http://localhost:8080/paginaContas`, {
+    const responseUtilizadores = await fetch(`http://localhost:8081/paginaContas`, {
         credentials: "include",
     })
 
@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const jsonUtilizadores = await responseUtilizadores.json()
 
-    const responseContas = await fetch(`http://localhost:8080/contas`, {
+    const responseContas = await fetch(`http://localhost:8081/contas`, {
         credentials: "include",
     })
 
@@ -133,7 +133,7 @@ document.getElementById("listaDonos").addEventListener("click", async (event) =>
         const listaContas = document.getElementById("listaContas")
         listaContas.innerHTML = ``
 
-        const responseContas = await fetch(`http://localhost:8080/contas`, {
+        const responseContas = await fetch(`http://localhost:8081/contas`, {
             credentials: "include",
         })
 
@@ -168,7 +168,7 @@ document.getElementById("listaDonos").addEventListener("click", async (event) =>
             listaContas.appendChild(clone)
         })
     } else {
-        const response = await fetch(`http://localhost:8080/contasTitular?titular=${idTitular}`, {
+        const response = await fetch(`http://localhost:8081/contasTitular?titular=${idTitular}`, {
             credentials: "include"
         })
 
@@ -297,7 +297,7 @@ document.getElementById("guardarConta").addEventListener("click", async (event) 
             titularError.textContent = ""
             titular.classList.remove("!border-red-500")
 
-            const response = await fetch("http://localhost:8080/adicionarConta", {
+            const response = await fetch("http://localhost:8081/adicionarConta", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -350,7 +350,7 @@ document.getElementById("guardarConta").addEventListener("click", async (event) 
         const senha = document.getElementById("inputSenha").value
         const titular = document.getElementById("campoTitular").value
 
-        const response = await fetch(`http://localhost:8080/editarConta`, {
+        const response = await fetch(`http://localhost:8081/editarConta`, {
             method: "PUT",
             credentials: "include",
             headers: {
@@ -398,7 +398,7 @@ document.getElementById("guardarConta").addEventListener("click", async (event) 
 })
 
 document.getElementById("sairConta").addEventListener("click", async () => {
-    const response = await fetch(`http://localhost:8080/sairConta`, {
+    const response = await fetch(`http://localhost:8081/sairConta`, {
         method: "DELETE",
         credentials: "include",
     })
@@ -431,7 +431,7 @@ document.getElementById("cancelarDono").addEventListener("click", () => {
 document.getElementById("criarDono").addEventListener("click", async (event) => {
     event.preventDefault()
     const dono = document.getElementById("nomeDono")
-    const response = await fetch(`http://localhost:8080/criarDono`, {
+    const response = await fetch(`http://localhost:8081/criarDono`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -467,7 +467,7 @@ document.getElementById("listaContas").addEventListener("click", async (event) =
         const imagemEsconder = botaoVer.querySelector("#iconeEsconder")
 
         if (imagemEsconder.classList.contains("hidden")) {
-            const responseSenha = await fetch(`http://localhost:8080/senhaConta?id_conta=${conta.id}`, {
+            const responseSenha = await fetch(`http://localhost:8081/senhaConta?id_conta=${conta.id}`, {
                 credentials: "include"
             })
 
@@ -508,7 +508,7 @@ document.getElementById("listaContas").addEventListener("click", async (event) =
 
         document.getElementById("formNovaConta").dataset.id = conta.id
 
-        const responseSenha = await fetch(`http://localhost:8080/senhaConta?id_conta=${conta.id}`, {
+        const responseSenha = await fetch(`http://localhost:8081/senhaConta?id_conta=${conta.id}`, {
             credentials: "include"
         })
 
@@ -576,7 +576,7 @@ document.getElementById("listaContas").addEventListener("click", async (event) =
         })
 
         document.getElementById("btnConfirmarApagar").addEventListener("click", async () => {
-            const response = await fetch(`http://localhost:8080/deleteConta?id_conta=${conta.id}`, {
+            const response = await fetch(`http://localhost:8081/deleteConta?id_conta=${conta.id}`, {
                 credentials: "include",
                 method: "DELETE"
             })

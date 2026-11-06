@@ -580,7 +580,7 @@ async def sair_conta(response: Response, nome_do_cookie: Annotated[str | None, C
         mydb.close()
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8080, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8081, reload=True)
     
 app.include_router(publico)   # liga os routers à app
 app.include_router(privado)

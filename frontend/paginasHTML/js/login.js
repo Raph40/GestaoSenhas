@@ -23,7 +23,7 @@ document.getElementById("login").addEventListener("click", async event => {
     }
 
     if (email.value && password.value) {
-        const response = await fetch("http://localhost:8080/login", {
+        const response = await fetch("http://localhost:8081/login", {
             method: "POST",
             credentials: "include",
             headers: {
