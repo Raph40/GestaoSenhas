@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,31 +8,80 @@
     <link rel="stylesheet" href="estilos/style.css" />
     <script type="module" src="js/registar.js"></script>
 </head>
+
 <body class="bg-slate-900 text-white flex items-center justify-center min-h-screen">
     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
         <form class="space-y-4">
             <h1 class="text-blue-500 text-2xl font-bold flex justify-center pb-6 uppercase">Criar Conta</h1>
             <label for="nome" class="block text-sm font-medium text-slate-300 mb-1">Nome</label>
-            <input type="text" name="Nome" id="nome" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite seu nome" />
+            <input type="text" name="Nome" id="nome"
+                class="mb-0 py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition"
+                placeholder="Digite seu nome" />
             <span id="nomeError" class="flex items-center font-medium tracking-wide text-red-500 text-xs ml-1"></span>
 
             <label for="email" class="block text-sm font-medium text-slate-300 mb-1">Email</label>
-            <input type="email" name="Email" id="email" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite seu email" />
+            <input type="email" name="Email" id="email"
+                class="mb-0 py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition"
+                placeholder="Digite seu email" />
             <span id="emailError" class="flex items-center font-medium tracking-wide text-red-500 text-xs ml-1"></span>
 
             <label for="senha" class="block text-sm font-medium text-slate-300 mb-1">Senha</label>
-            <input type="password" name="Senha" id="senha" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite sua senha" />
+            <input type="password" name="Senha" id="senha"
+                class="mb-0 py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition"
+                placeholder="Digite sua senha" />
             <span id="senhaError" class="flex items-center font-medium tracking-wide text-red-500 text-xs ml-1"></span>
 
             <label for="confirmarSenha" class="block text-sm font-medium text-slate-300 mb-1">Confirmar Senha</label>
-            <input type="password" name="ConfirmarSenha" id="confirmarSenha" class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition" placeholder="Digite sua senha" />
-            <span id="confimarSenhaError" class="flex items-center font-medium tracking-wide text-red-500 text-xs ml-1"></span>
+            <input type="password" name="ConfirmarSenha" id="confirmarSenha"
+                class="mb-0 py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-layer border border-slate-800 sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none transition"
+                placeholder="Digite sua senha" />
+            <span id="confimarSenhaError"
+                class="flex items-center font-medium tracking-wide text-red-500 text-xs ml-1"></span>
 
-            <button type="submit" id="botaoRegistar" class="w-full py-3 px-4 inline-flex justify-center items-center text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">Registrar</button>
+            <button type="submit" id="botaoRegistar"
+                class="w-full py-3 px-4 inline-flex justify-center items-center text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">Registrar</button>
         </form>
     </div>
-    <div id="mensagemSucesso" role="status"
-         class="hidden fixed top-6 left-1/2 z-50
+    <!-- Modal de sucesso: Registo de conta -->
+    <div id="successModal" tabindex="-1" aria-hidden="true"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="relative w-full max-w-md rounded-2xl border border-slate-800 bg-cartao p-6">
+            <!-- Botão fechar -->
+            <button type="button" data-modal-toggle="successModal" aria-label="Fechar modal"
+                class="absolute top-4 right-4 rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white">
+
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+            <!-- Ícone de sucesso -->
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-green-900/50">
+                <svg class="h-7 w-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7">
+                    </path>
+                </svg>
+            </div>
+            <!-- Título -->
+            <h2 class="text-lg font-semibold text-white">
+                Conta registada com sucesso!
+            </h2>
+            <!-- Tipo de operação -->
+            <span id="tipoOperacao" class="sr-only">Registo de conta</span>
+            <!-- Mensagem -->
+            <p id="conteudoMensagem" class="mt-3 text-justify leading-relaxed text-slate-300">
+                A sua conta foi registada com sucesso. Já pode consultar os dados da conta na sua lista de contas.
+            </p>
+            <!-- Botão continuar -->
+            <div class="mt-6 flex justify-end">
+                <button id="continuarSuccess" type="button" data-modal-toggle="successModal"
+                    class="rounded-xl bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-800">
+                    Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="mensagemSucesso" role="status" class="hidden fixed top-6 left-1/2 z-50
             w-11/12 max-w-lg items-center gap-4 rounded-xl
             border-2 border-green-300 bg-green-600 px-6 py-5
             text-white shadow-2xl">
@@ -39,4 +89,5 @@
         <span id="mensagemTexto" class="text-xl font-semibold"></span>
     </div>
 </body>
+
 </html>

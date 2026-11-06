@@ -26,6 +26,11 @@ botao.addEventListener('click', async (e) => {
         emailError.textContent = ""
         email.classList.remove("!border-red-500")
     }
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!regexEmail.test(email.value)) {
+        document.getElementById("emailError").textContent = "Campo Email deve conter um email valido!"
+        email.classList.add("!border-red-500")
+    }
 
     if (senha.value === '') {
         const senhaError = document.getElementById('senhaError')
@@ -75,11 +80,28 @@ botao.addEventListener('click', async (e) => {
         const json = await response.json()
 
         if ("Sucesso" in json) {
-            const mensagem = document.getElementById('mensagemSucesso')
-            document.getElementById("mensagemTexto").textContent = json["Sucesso"]
-            mensagem.classList.remove("hidden")
-            mensagem.classList.add("flex");
-            setTimeout(() => window.location.href = "../index.html", 3000);
+            const popEditar = document.getElementById("successModal")
+            popEditar.setAttribute('aria-hidden', 'false')
+            popEditar.classList.remove("hidden")
+            popEditar.classList.add("show")
+
+            document.querySelector(`button[data-modal-toggle="successModal"]`).addEventListener("click", () => {
+                document.activeElement.blur()
+
+                popEditar.setAttribute('aria-hidden', 'true')
+                popEditar.classList.remove("show");
+                popEditar.classList.add("hidden");
+            })
+
+            document.getElementById("continuarSuccess").addEventListener("click", () => {
+                document.activeElement.blur()
+
+                popEditar.setAttribute('aria-hidden', 'true')
+                popEditar.classList.remove("show");
+                popEditar.classList.add("hidden");
+
+                window.location.href = "../index.html"
+            })
         }
     }
 })

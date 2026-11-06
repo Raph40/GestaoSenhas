@@ -9,6 +9,11 @@ document.getElementById("login").addEventListener("click", async event => {
         document.getElementById("emailError").textContent = ""
         email.classList.remove("!border-red-500")
     }
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!regexEmail.test(email.value)) {
+        document.getElementById("emailError").textContent = "Campo Email deve conter um email valido!"
+        email.classList.add("!border-red-500")
+    }
     if (password.value == "") {
         document.getElementById("passwordError").textContent = "Campo Senha Obrigatorio!"
         password.classList.add("!border-red-500")
@@ -35,23 +40,11 @@ document.getElementById("login").addEventListener("click", async event => {
         console.log(json)
 
         if ("Erro" in json) {
-            const mensagemErro = document.getElementById("mensagemErro")
-            document.getElementById("mensagemErroTexto").textContent = json["Erro"]
-            mensagemErro.classList.remove("hidden");
-            mensagemErro.classList.add("flex");
-
-            setTimeout(() => {
-                mensagemErro.classList.add("hidden");
-                mensagemErro.classList.remove("flex");
-            }, 4000);
+            const passwordError = document.getElementById("passwordError")
+            passwordError.textContent = "Senha Incorreta"
+            passwordError.classList.add("!border-red-500")
         } else if ("Sucesso" in json) {
-            const mensagemSucesso = document.getElementById("mensagemSucesso")
-            document.getElementById("mensagemSucessoTexto").textContent = json["Sucesso"]
-            mensagemSucesso.classList.remove("hidden");
-            mensagemSucesso.classList.add("flex");
-            setTimeout(() => {
-                window.location.href = "../paginaInicial.html";
-            }, 2000);
+            window.location.href = "../paginaInicial.html"
         }
     }
 })

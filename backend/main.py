@@ -8,6 +8,7 @@ from fastapi import FastAPI, Response, Cookie, APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, EmailStr
 from fastapi.middleware.cors import CORSMiddleware
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from datetime import datetime, timedelta
 from typing import Annotated
 from mysql.connector import IntegrityError, DataError, OperationalError, DatabaseError, OperationalError, ProgrammingError, DatabaseError
@@ -200,6 +201,9 @@ async def login(inf_login: Login, response: Response):
     perfil_valor = (inf_login.email,)
     mycursor.execute(perfil_querry, perfil_valor)
     conta = mycursor.fetchone()
+    
+    if not conta:
+        return {"Erro": "Email não existe!"}
 
     try:
         ph.verify(conta[3], inf_login.senha)
@@ -237,6 +241,8 @@ async def login(inf_login: Login, response: Response):
     except DatabaseError:
         mydb.rollback
         return {"Erro"}
+    except VerifyMismatchError:
+        return {"Erro": "Senha Incorreta!"}
     finally:
         mycursor.close()
         mydb.close()
